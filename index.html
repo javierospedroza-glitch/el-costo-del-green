@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>El Costo del Green · Fuera de Límites</title>
+<meta name="description" content="Tienes talento. ¿Te alcanza? Simulador de decisiones de un golfista profesional en Colombia. Parte del proyecto transmedia Fuera de Límites.">
+<meta name="theme-color" content="#050505">
+<meta property="og:title" content="El Costo del Green · Fuera de Límites">
+<meta property="og:description" content="Tienes talento. ¿Te alcanza? Toma las decisiones de un golfista profesional en Colombia.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjMDUwNTA1Ii8+PGcgZmlsbD0iI2Y0ZjFlYSI+PHJlY3QgeD0iMTIiIHk9IjIwIiB3aWR0aD0iNSIgaGVpZ2h0PSIyMiIgcng9IjEiLz48cmVjdCB4PSIyOS41IiB5PSIyMCIgd2lkdGg9IjUiIGhlaWdodD0iMjIiIHJ4PSIxIi8+PHJlY3QgeD0iNDciIHk9IjIwIiB3aWR0aD0iNSIgaGVpZ2h0PSIyMiIgcng9IjEiLz48cmVjdCB4PSI2IiB5PSI0MiIgd2lkdGg9IjUyIiBoZWlnaHQ9IjIiLz48L2c+PC9zdmc+">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;600;900&display=swap">
+<style>
+:root{
+--bg:#050505; --panel:#111110; --line:#2a2925; --fg:#f4f1ea; --soft:#cfcabd; --muted:#8f8a7d;
+--red:#e0483a; --green:#7cc28f; --cream:#f4f1ea; --ink:#0d0d0c;
+--font:"Inter Tight","Inter","Helvetica Neue",Arial,sans-serif;
+color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:17px;line-height:1.5;min-height:100vh;min-height:100dvh}
+.wrap{max-width:560px;margin:0 auto;padding:16px 16px calc(32px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:18px}
+button{font:inherit}
+/* Cabecera y medidores */
+.hud{position:sticky;top:0;z-index:5;background:linear-gradient(var(--bg) 85%,rgba(5,5,5,0));padding-top:max(8px,env(safe-area-inset-top));margin:0 -16px;padding-inline:16px;padding-bottom:10px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px}
+.brand{font-weight:300;letter-spacing:.38em;font-size:11px;color:var(--soft);text-transform:uppercase}
+.month{font-weight:600;font-size:11px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;font-variant-numeric:tabular-nums;text-align:right}
+.bars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 12px;border:1px solid var(--line);background:var(--panel);padding:12px}
+.bar.money{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between;gap:12px}
+.bar.money .val{font-size:22px}
+.status{grid-column:1/-1;display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);letter-spacing:.06em;border-top:1px solid var(--line);padding-top:8px}
+.status b{color:var(--fg)}
+.status .bad{color:var(--red)}
+.bar{display:flex;flex-direction:column;gap:5px;min-width:0}
+.lbl{font-size:10px;font-weight:600;letter-spacing:.22em;color:var(--muted);text-transform:uppercase}
+.val{font-weight:900;font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .3s}
+.track{height:5px;background:var(--line);overflow:hidden}
+.fill{height:100%;background:var(--fg);transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.fill.low{background:var(--red)}
+.val.low{color:var(--red)}
+.bump{animation:bump .5s ease}
+@keyframes bump{40%{transform:scale(1.08)}}
+/* Motivo de estacas (fuera de límites) */
+.stakes{display:flex;justify-content:center;gap:clamp(14px,5vw,26px);align-items:flex-end;padding-top:4px}
+.stakes i{display:block;width:3px;height:14px;background:var(--fg);border-radius:1px}
+.ob{height:1px;background:linear-gradient(90deg,transparent,var(--fg) 15%,var(--fg) 85%,transparent);margin-top:-1px}
+.screen{display:flex;flex-direction:column;gap:16px;animation:in .45s ease}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.screen,.bump{animation:none}.fill{transition:none}}
+.kicker{font-weight:300;font-size:12px;letter-spacing:.5em;color:var(--soft);text-transform:uppercase;text-align:center}
+h1{font-weight:900;font-size:clamp(48px,16vw,84px);line-height:.92;margin:0;letter-spacing:-.01em;text-transform:uppercase;text-align:center;text-wrap:balance}
+h2{font-weight:900;font-size:clamp(26px,7.2vw,36px);line-height:1.05;margin:0;text-wrap:balance}
+p{margin:0}
+.lead{color:var(--soft)}
+.hook{font-weight:600;font-size:20px;line-height:1.3;border-left:3px solid var(--fg);padding-left:14px}
+.tag{font-size:11px;font-weight:600;letter-spacing:.28em;color:var(--muted);text-transform:uppercase}
+.flow{font-size:14px;color:var(--muted);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 0;font-variant-numeric:tabular-nums}
+.flow b{color:var(--soft);font-weight:600}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.how div{background:var(--panel);padding:12px;font-size:13px;color:var(--soft);line-height:1.35}
+.how b{display:block;color:var(--fg);font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:4px}
+.credits{font-size:13px;color:var(--muted);line-height:1.45}
+/* Opciones */
+.opts{display:flex;flex-direction:column;gap:12px}
+.opt{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:4px;background:var(--cream);color:var(--ink);padding:16px 18px;min-height:56px;transition:transform .15s ease,background .15s}
+.opt:hover{transform:translateX(4px)}
+.opt:active{transform:scale(.99)}
+.opt .t{font-weight:900;font-size:19px;line-height:1.15}
+.opt .c{font-size:14px;font-weight:600;color:#4b4840;font-variant-numeric:tabular-nums}
+.opt.dis{opacity:.45;pointer-events:none}
+.opt[disabled]{opacity:.4;cursor:not-allowed}
+.opt[disabled]:hover{transform:none}
+.opt .why{font-size:13px;font-weight:600;color:#a3342a}
+.opt .fx{font-size:13px;color:#5d594f;line-height:1.35}
+.btn{all:unset;box-sizing:border-box;cursor:pointer;text-align:center;background:var(--fg);color:var(--ink);font-weight:900;font-size:16px;letter-spacing:.14em;text-transform:uppercase;padding:17px 20px;min-height:52px}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--fg)}
+.btn:focus-visible,.opt:focus-visible{outline:3px solid var(--red);outline-offset:3px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-size:13px;font-weight:600;padding:5px 10px;border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip.up{color:var(--green);border-color:rgba(124,194,143,.4)}
+.chip.down{color:var(--red);border-color:rgba(224,72,58,.45)}
+.warn{font-size:14px;color:var(--soft);border-left:3px solid var(--red);padding-left:12px}
+/* Torneo */
+.card{border:1px solid var(--line);background:var(--panel);padding:16px;display:flex;flex-direction:column;gap:10px}
+.result{font-weight:900;font-size:clamp(28px,8vw,40px);line-height:1;text-transform:uppercase}
+.result.bad{color:var(--red)}.result.good{color:var(--green)}
+.ledger{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:15px;font-variant-numeric:tabular-nums}
+.ledger .n{text-align:right;font-weight:600}
+.ledger .tot{border-top:1px solid var(--line);padding-top:6px;font-weight:900}
+.cons{border:1px solid var(--line);border-left:3px solid var(--fg);padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--panel)}
+.cons .ct{font-weight:900;font-size:18px;line-height:1.2}
+/* Testimonio */
+.quote{margin:0;padding:14px 0 0;border-top:1px solid var(--line)}
+.quote q{display:block;font-weight:300;font-size:19px;line-height:1.35;quotes:"“" "”"}
+.quote cite{display:block;margin-top:8px;font-style:normal;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+/* Final */
+.ending{font-size:12px;font-weight:600;letter-spacing:.32em;color:var(--red);text-transform:uppercase;text-align:center}
+.ending.ok{color:var(--green)}
+.big{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.big div{background:var(--panel);padding:14px}
+.big .n{display:block;font-weight:900;font-size:22px;font-variant-numeric:tabular-nums}
+.big span{font-size:13px;color:var(--soft)}
+.note{font-weight:600;font-size:18px;line-height:1.35;text-align:center;padding:6px 4px}
+ol.log{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:15px;color:var(--soft)}
+ol.log li{display:grid;grid-template-columns:78px 1fr;gap:10px}
+ol.log.num li{grid-template-columns:24px 1fr}
+ol.log li span{color:var(--muted);font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding-top:2px}
+.docu{border:1px solid var(--fg);padding:18px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.docu h3{margin:0;font-weight:900;font-size:26px;text-transform:uppercase;line-height:1}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1 1 200px}
+/* Encuesta */
+form.uni{display:flex;flex-direction:column;gap:16px;border-top:1px solid var(--line);padding-top:18px}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend,label.q{font-weight:600;font-size:16px;margin-bottom:8px;padding:0}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pills input{position:absolute;opacity:0;pointer-events:none}
+.pills label{border:1px solid var(--line);padding:9px 12px;font-size:14px;cursor:pointer;min-height:40px;display:flex;align-items:center}
+.pills input:checked+label{background:var(--fg);color:var(--ink);border-color:var(--fg)}
+.pills input:focus-visible+label{outline:3px solid var(--red);outline-offset:2px}
+textarea{width:100%;background:var(--panel);color:var(--fg);border:1px solid var(--line);padding:12px;font:inherit;font-size:16px;resize:vertical}
+.muted{color:var(--muted);font-size:14px}
+footer{font-size:12px;color:var(--muted);text-align:center;line-height:1.5;padding-top:8px}
+.sources{font-size:12px;color:var(--muted);line-height:1.5}
+.sources summary{cursor:pointer;letter-spacing:.2em;text-transform:uppercase;font-weight:600;font-size:11px;padding:6px 0}
+.dice{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hud" id="hud">
+<div class="top"><span class="brand">Fuera de Límites</span><span class="month" id="month">Temporada 2026</span></div>
+<div class="bars" role="group" aria-label="Estado del golfista">
+<div class="bar money"><span class="lbl">Plata</span><span class="val" id="vPlata" aria-live="polite"></span></div>
+<div class="bar"><span class="lbl">Técnica</span><span class="val" id="vTec"></span><div class="track"><div class="fill" id="fTec"></div></div></div>
+<div class="bar"><span class="lbl">Físico</span><span class="val" id="vFis"></span><div class="track"><div class="fill" id="fFis"></div></div></div>
+<div class="bar"><span class="lbl">Cabeza</span><span class="val" id="vMen"></span><div class="track"><div class="fill" id="fMen"></div></div></div>
+<div class="bar"><span class="lbl">Reputación</span><span class="val" id="vRep"></span><div class="track"><div class="fill" id="fRep"></div></div></div>
+<div class="status" id="status"></div>
+</div>
+</header>
+<main class="screen" id="screen" aria-live="polite"></main>
+<footer>El Costo del Green · parte del universo transmedia <b>Fuera de Límites: el costo real del golf profesional en Colombia</b>.</footer>
+</div>
+<script>
+/* =====================================================================
+CONFIGURACIÓN — lo único que el equipo necesita editar
+===================================================================== */
+const CONFIG = {
+// Link del documental (YouTube, Vimeo, Drive…). Si se deja vacío, el botón no aparece.
+documentalURL: "",
+// Encuesta opcional en Google Forms (ver README.md). Si se deja en null, la encuesta no aparece.
+googleForm: null
+};
+/* =====================================================================
+DATOS — precios Colombia 2026 (ver "Fuentes" al final del juego)
+===================================================================== */
+const P = {
+desarrollo:455000, marcador:150000, regional:200000, hatogrande:500000, championship:555000,
+caddie:{pro:300000, eco:200000, solo:0, familia:50000},
+psico:150000, clase:80000, fisico:300000, equipo:1800000,
+americas:2500000, // inscripción USD 220 + impuestos (≈ COP 900.000) + caddie, hospedaje y transporte de la semana
+coachPlan:2500000, coachClases:400000, coachEco:200000
+};
+const TORNEOS = {
+regional:{nombre:"Torneo regional",campo:48,premios:[150000,400000,1000000,2000000]},
+desarrollo:{nombre:"Tour de Desarrollo · FEDEGOLF",campo:54,premios:[300000,900000,2500000,5000000]},
+hatogrande:{nombre:"8º Abierto Hatogrande",campo:59,premios:[800000,2500000,7000000,13000000]},
+championship:{nombre:"Tour Championship Colombia",campo:61,premios:[800000,2500000,7000000,13000000]},
+americas:{nombre:"PGA Tour Americas · parada en Colombia",campo:80,premios:[8000000,24000000,60000000,160000000],usd:["≈ USD 2.000","≈ USD 6.000","≈ USD 15.000","USD 40.500"]}
+};
+const Q = {
+carlosEco:{t:"La realidad es que el tema económico es determinante.",w:"Carlos Avendaño · periodista de golf"},
+carlosSolo:{t:"A diferencia de los deportes de conjunto, en el golf todos los gastos recaen sobre una sola persona.",w:"Carlos Avendaño · periodista de golf"},
+carlosMedios:{t:"Salvo que haya un muy buen resultado, el golf no tiene esos espacios en los medios.",w:"Carlos Avendaño · periodista de golf"},
+alejoBog:{t:"Cuando los torneos son en Bogotá, el presupuesto más o menos para un torneo es de un millón y medio: la inscripción y el caddie.",w:"Alejandro Velásquez · golfista profesional"},
+alejoCorte:{t:"Vamos a un torneo, nos gastamos tres o cuatro millones y no pasamos el corte. Son tres o cuatro millones que están perdidos.",w:"Alejandro Velásquez · golfista profesional"},
+alejoClases:{t:"Son tres o cuatro horas que ya me gasté dando clases para poder tener el sustento para sobrevivir, y otras tres o cuatro para entrenar.",w:"Alejandro Velásquez · golfista profesional"},
+alejoLesion:{t:"Me sentía en el mejor momento. Salí convencido de que me iba a ganar el torneo… y en el hoyo ocho me lesioné.",w:"Alejandro Velásquez · golfista profesional"},
+alejoMentira:{t:"La plata siempre va a ser una presión, y el que diga que eso no presiona es un mentiroso.",w:"Alejandro Velásquez · golfista profesional"},
+alejoDisfrutar:{t:"Si voy a un torneo y no disfruto, no jugaré más. La idea de esto es uno ser feliz y disfrutarlo.",w:"Alejandro Velásquez · golfista profesional"},
+gusBolsa:{t:"Las bolsas siguen siendo las mismas de hace 15 años. Tengo que salir tercero o ganar para recuperar.",w:"Gustavo Mendoza · 69 torneos ganados en Colombia"},
+gusPresion:{t:"La presión es mayor cuando usted tiene que jugar bien para poder pagar las cosas de su casa.",w:"Gustavo Mendoza · 69 torneos ganados en Colombia"},
+gusPatrocinio:{t:"A no ser que sea uno muy amigo del dueño de la empresa o algo así, le dan algo de dinero.",w:"Gustavo Mendoza · 69 torneos ganados en Colombia"},
+gusEquipo:{t:"Lo más importante es tener un buen entrenador, una buena preparación física, una persona que lo ayude mentalmente… y una cuenta grande, porque eso vale mucho.",w:"Gustavo Mendoza · 69 torneos ganados en Colombia"},
+gusUSA:{t:"Usted no puede irse a Estados Unidos, jugar un torneo y, si no pasa algo, devolverse. Por eso no logramos, aunque teníamos el nivel.",w:"Gustavo Mendoza · 69 torneos ganados en Colombia"},
+gusApoyo:{t:"Hay personas que juegan muy bien, pero no tienen el apoyo. Sin eso, en la mitad todos se devuelven.",w:"Gustavo Mendoza · 69 torneos ganados en Colombia"}
+};
+/* =====================================================================
+ESTADO Y UTILIDADES
+===================================================================== */
+let s, step, phase, view, prev={};
+const $=id=>document.getElementById(id);
+const cop=n=>(n<0?"−":"")+"$"+Math.abs(Math.round(n)).toLocaleString("es-CO");
+const clamp=v=>Math.max(0,Math.min(100,v));
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const chance=p=>Math.random()<p;
+const LAB={dinero:"Plata",tecnica:"Técnica",fisico:"Físico",mental:"Cabeza",rep:"Reputación",lesion:"Lesión",ranking:"Ranking"};
+function apply(d){for(const[k,v]of Object.entries(d||{})){if(!v)continue;if(k==="dinero"||k==="ranking")s[k]+=v;else s[k]=clamp(s[k]+v)} s.ranking=Math.max(1,Math.min(250,s.ranking));}
+function chips(d){return Object.entries(d||{}).filter(([,v])=>v).map(([k,v])=>{
+const good=(k==="lesion"||k==="ranking")?v<0:v>0;
+const txt=k==="dinero"?(v>0?"+":"")+cop(v):k==="ranking"?(v<0?"sube "+(-v)+" puestos":"baja "+v+" puestos"):(v>0?"+":"")+v;
+return `<span class="chip ${good?"up":"down"}">${LAB[k]} ${txt}</span>`}).join("")}
+const quote=k=>{const q=Q[k];return q?`<figure class="quote"><q>${q.t}</q><cite>${q.w}</cite></figure>`:""};
+const STAKES=`<div><div class="stakes">${"<i></i>".repeat(9)}</div><div class="ob"></div></div>`;
+function pay(n){s.dinero-=n; s.gastado+=n}
+function hud(){
+const set=(id,txt)=>{const el=$(id);if(prev[id]!==undefined&&prev[id]!==txt){el.classList.remove("bump");void el.offsetWidth;el.classList.add("bump")}prev[id]=txt;el.textContent=txt};
+set("vPlata",cop(s.dinero)); $("vPlata").classList.toggle("low",s.dinero<600000);
+[["vTec","fTec","tecnica"],["vFis","fFis","fisico"],["vMen","fMen","mental"],["vRep","fRep","rep"]].forEach(([v,f,k])=>{set(v,Math.round(s[k]));$(v).classList.toggle("low",s[k]<25);$(f).style.width=s[k]+"%";$(f).classList.toggle("low",s[k]<25)});
+$("status").innerHTML=`<span>Ranking nacional <b>#${s.ranking}</b></span>${s.lesion>0?`<span class="${s.lesion>=40?"bad":""}">Lesión <b>${Math.round(s.lesion)}</b></span>`:""}${s.deuda>0?`<span class="bad">Deuda <b>${cop(s.deuda)}</b></span>`:""}${s.patro?`<span>Patrocinio <b>sí</b></span>`:""}`;
+}
+/* =====================================================================
+TORNEOS
+El talento de partida es igual en todas las partidas. El resultado depende de
+técnica, cabeza, físico, caddie, lesión y de la presión de necesitar la plata.
+===================================================================== */
+function jugar(key,mod=0,varianza=0,tope=null){
+const T=TORNEOS[key];
+let score=s.tecnica*.45+s.mental*.25+s.fisico*.15+5;
+const cad={pro:5,eco:2,familia:0,solo:-3,marcador:0}[s.caddieUso]||0;
+score+=cad+mod-(s.lesion*.15)+(s.dinero<500000?-6:0)+rnd(-12-varianza,12+varianza);
+const d=score-T.campo;
+let k=d<-4?0:d<5?1:d<12?2:d<19?3:4;
+if(tope!==null) k=Math.min(k,tope);
+const NOM=["No pasaste el corte","Pasaste el corte","Top 10","Top 3","¡Ganaste el torneo!"];
+const premio=k===0?0:T.premios[k-1];
+const fx=[{mental:-10,rep:-2,ranking:12},{mental:2,rep:3,ranking:-6},{mental:4,rep:8,ranking:-15},{mental:7,rep:14,ranking:-28},{mental:10,rep:22,ranking:-45}][k];
+if(key==="americas"){fx.rep+=10; fx.ranking=Math.round(fx.ranking*1.3)}
+apply(fx); apply({tecnica:2}); s.dinero+=premio; s.premios+=premio; s.torneos.push({key,k});
+if(k>0)s.cortes++; else s.fallos++;
+if(s.caddieUso==="solo") apply({fisico:-8,lesion:10});
+return {T,key,k,txt:NOM[k],premio,fx,cad,usd:T.usd&&k>0?T.usd[k-1]:null,presion:s.dinero-premio<500000};
+}
+/* =====================================================================
+ESCENARIOS
+Cada opción: t (título), c (costo/efecto visible), fx (texto corto), cost (para
+bloquear si no alcanza), go() → {r: respuesta, d: cambios, eco: aviso de futuro}
+===================================================================== */
+const SC = {
+inicio:{tag:"Inicio de temporada",titulo:"¿Qué torneo juegas primero?",q:"carlosEco",
+texto:()=>`Te llega la invitación al <b>Tour de Desarrollo</b> de la Federación Colombiana de Golf: inscripción de ${cop(P.desarrollo)} para nacionales y, como allí no se permite caddie, un marcador obligatorio de ${cop(P.marcador)}. También hay un torneo regional más barato, con menos exposición.`,
+opts:[
+{t:"Inscribirme al Tour de Desarrollo",c:`−${cop(P.desarrollo+P.marcador)}`,fx:"Más exposición y puntos. Si te va mal, pierdes plata y confianza.",cost:P.desarrollo+P.marcador,
+go:()=>{pay(P.desarrollo+P.marcador);s.torneoA="desarrollo";s.caddie="marcador";return{r:"Te inscribes. Juegas con marcador: aquí no hay caddie que te lea el green.",d:{dinero:-(P.desarrollo+P.marcador),rep:4}}}},
+{t:"Jugar un torneo regional más barato",c:`−${cop(P.regional)}`,fx:"Conservas plata. Menos exposición y el ranking avanza más lento.",cost:P.regional,
+go:()=>{pay(P.regional);s.torneoA="regional";return{r:"Eliges el regional. Menos reflectores, más plata en el bolsillo.",d:{dinero:-P.regional,mental:3}}}},
+{t:"No competir y entrenar un mes",c:"$0",fx:"Mejoras técnica y físico, pero pierdes ritmo y contactos.",
+go:()=>{s.sinRitmo=true;return{r:"Un mes de práctica sin la presión de la tarjeta. El swing mejora; el ranking se queda quieto.",d:{tecnica:6,fisico:5,rep:-3,ranking:6},eco:"Más adelante vas a sentir la falta de ritmo en un torneo importante."}}},
+{t:"Buscar un patrocinador antes de inscribirme",c:"$0 · puede fallar",fx:"Podrías conseguir entre $500.000 y $2.000.000. Consume tiempo.",
+go:()=>{if(chance(.45)){const m=Math.round(rnd(5,20))*100000;s.dinero+=m;s.patroLocal=true;return{r:`Un concesionario de tu ciudad te apoya con ${cop(m)} para la temporada. Te perdiste la primera parada, pero ahora tienes con qué competir.`,d:{dinero:m,rep:6,mental:4},eco:"Esa empresa va a estar pendiente de tus resultados."}}
+return{r:"Tocas diez puertas. Todos te felicitan por el talento; nadie firma. Se te pasó la primera parada.",d:{mental:-10,ranking:6}}}}
+]},
+caddie:{tag:"El caddie",titulo:"¿Cómo manejas el caddie?",q:"alejoBog",
+texto:()=>`En el torneo el caddie cuesta cerca de ${cop(100000)} por día: ${cop(P.caddie.pro)} por las tres rondas. En algunos abiertos es obligatorio. Lo que decidas aquí lo vas a repetir en los próximos torneos.`,
+opts:[
+{t:"Contratar un caddie profesional",c:`−${cop(P.caddie.pro)} por torneo`,fx:"Mejor lectura del campo y mejores decisiones.",cost:P.caddie.pro,
+go:()=>{s.caddie="pro";return{r:"Don Arturo lleva 20 años en ese campo. Sabe hacia dónde caen todos los greens.",d:{mental:4}}}},
+{t:"Un caddie económico o conocido",c:`−${cop(P.caddie.eco)} por torneo`,fx:"Ahorras, pero puede fallar en una lectura clave.",cost:P.caddie.eco,
+go:()=>{s.caddie="eco";return{r:"Contratas a un muchacho que está empezando. Le pone ganas; a veces le falta experiencia.",d:{}}}},
+{t:"Cargar yo mismo la bolsa",c:"$0",fx:"Ahorras todo. Más cansancio y riesgo de lesión.",
+go:()=>{s.caddie="solo";return{r:"Te cuelgas la bolsa al hombro. Son 18 hoyos, tres días seguidos.",d:{},eco:"La espalda te lo va a cobrar."}}},
+{t:"Pedirle ayuda a un familiar o amigo",c:`−${cop(P.caddie.familia)} en refrigerios`,fx:"Mucho apoyo emocional, poco conocimiento técnico.",cost:P.caddie.familia,
+go:()=>{s.caddie="familia";return{r:"Tu hermano te carga la bolsa. No sabe leer un green, pero sabe cuándo bajarte las revoluciones.",d:{mental:8}}}}
+]},
+vuelta:{tag:"Primera vuelta",titulo:"Tres bogeys seguidos",q:"alejoMentira",
+texto:()=>`Vas 4 sobre el par en la primera vuelta del <b>${TORNEOS[s.vueltaEn].nombre}</b> y sientes que el torneo se te escapa.`,
+opts:[
+{t:"Jugar más conservador",c:"Estabilizas",fx:"Menos errores, pero difícil remontar.",go:()=>{s.mod={m:2,v:-4,tope:2};return{r:"Sacas el driver de la bolsa y juegas a calle y a green. Sin heroísmos.",d:{mental:3}}}},
+{t:"Forzar birdies para recuperar",c:"Todo o nada",fx:"Puedes remontar o quedar eliminado.",go:()=>{s.mod={m:0,v:10};return{r:"Atacas cada bandera. Es la única forma de volver… o de hundirte.",d:{}}}},
+{t:"Consultar al caddie",c:"Depende del caddie",fx:"Mejores decisiones si tu caddie conoce el campo.",req:()=>["pro","eco","familia"].includes(s.caddieUso)?null:(s.caddieUso==="marcador"?"En este torneo juegas con marcador, no hay caddie.":"No tienes caddie: cargas tu propia bolsa."),
+go:()=>{const b={pro:7,eco:3,familia:1}[s.caddieUso];s.mod={m:b,v:0};return{r:{pro:"Don Arturo te frena: \"Respire. Este campo se gana en el back nine\".",eco:"Tu caddie te sugiere un palo de más. Acierta… casi siempre.",familia:"Tu hermano no sabe de palos, pero te hace reír en el tee del 10."}[s.caddieUso],d:{mental:3}}}},
+{t:"Perder la calma",c:"Sin filtro",fx:"Es humano, pero sale caro.",go:()=>{s.mod={m:-8,v:4};return{r:"Tiras el putter contra la bolsa. Los otros jugadores del grupo miran para otro lado.",d:{mental:-10,rep:-3},eco:"Esa vuelta te va a pesar en la confianza del resto de la temporada."}}}
+]},
+presupuesto:{tag:"Presupuesto",titulo:"¿En qué priorizas tu plata?",q:"carlosSolo",
+texto:()=>`Te quedan ${cop(s.dinero)} y viene el <b>8º Abierto Hatogrande</b> (inscripción profesional: ${cop(P.hatogrande)}, bolsa de $75 millones). Antes de competir, ¿en qué inviertes?`,
+opts:[
+{t:"Pagar psicólogo deportivo",c:`−${cop(P.psico*2)} · dos sesiones`,fx:"Mejor manejo de la presión. No arregla el swing.",cost:P.psico*2,
+go:()=>{pay(P.psico*2);s.psico=true;return{r:"Aprendes una rutina de respiración antes de cada golpe. Por primera vez separas el tiro de la deuda.",d:{dinero:-P.psico*2,mental:12}}}},
+{t:"Pagar clases de swing",c:`−${cop(P.clase*4)} · cuatro horas`,fx:"Más técnica. Si cambias mucho cerca del torneo, puedes dudar.",cost:P.clase*4,
+go:()=>{pay(P.clase*4);return{r:"Corriges el plano del swing. Funciona en el campo de práctica; falta verlo bajo presión.",d:{dinero:-P.clase*4,tecnica:7,mental:-3}}}},
+{t:"Pagar entrenamiento físico",c:`−${cop(P.fisico)} · un mes`,fx:"Más resistencia y menos riesgo de lesión.",cost:P.fisico,
+go:()=>{pay(P.fisico);return{r:"Movilidad, core y espalda. No te baja golpes mañana, pero te protege.",d:{dinero:-P.fisico,fisico:10,lesion:-10}}}},
+{t:"Ahorrar todo para competir",c:"$0",fx:"Más torneos posibles, menos preparación.",
+go:()=>{return{r:"Guardas cada peso para inscripciones. Llegas igual que siempre.",d:{mental:-2}}}},
+{t:"Comprar equipo nuevo",c:`−${cop(P.equipo)}`,fx:"Más confianza. No garantiza resultados.",cost:P.equipo,
+go:()=>{pay(P.equipo);return{r:"Hierros nuevos, ajustados a tu swing. Suenan distinto. ¿Eras tú o eran los palos?",d:{dinero:-P.equipo,tecnica:4,mental:6}}}}
+]},
+semana:{tag:"Semana de torneo",titulo:"La semana antes de Hatogrande",q:"alejoClases",
+texto:()=>`Es la semana previa. También te ofrecen dar clases a principiantes para ganar plata extra.`,
+opts:[
+{t:"Entrenar intensamente",c:"$0",fx:"Llegas afinado… o cansado.",go:()=>{const fat=chance(.45);return{r:fat?"Seis horas diarias en el campo de práctica. Llegas con el swing afinado y la espalda cargada.":"Entrenas fuerte y dosificas bien. Llegas afilado.",d:fat?{tecnica:6,fisico:-10,lesion:15}:{tecnica:7,fisico:-3}}}},
+{t:"Dar clases y generar ingresos",c:"+$200.000 a $500.000",fx:"Mejora la economía; pierdes práctica.",go:()=>{const m=Math.round(rnd(2,5))*100000;s.dinero+=m;s.ingresos+=m;return{r:`Ganas ${cop(m)} enseñando a sostener un hierro 7. Tu propio swing espera.`,d:{dinero:m,tecnica:-3,fisico:-2}}}},
+{t:"Descansar y prepararme mentalmente",c:"$0",fx:"Energía y cabeza. Se siente como perder tiempo.",go:()=>{return{r:"Duermes, caminas el campo sin palos y visualizas cada hoyo.",d:{fisico:8,mental:8}}}},
+{t:"Aceptar una exhibición publicitaria",c:"+$400.000",fx:"Plata y exposición, pero distrae.",go:()=>{s.dinero+=400000;s.ingresos+=400000;s.exhibicion=true;return{r:"Haces una clínica para un banco en un club de Bogotá. Fotos, apretones de mano y un sobre.",d:{dinero:400000,rep:8,tecnica:-2},eco:"Alguien de esa empresa se quedó con tu nombre."}}}
+]},
+dinero:{tag:"Falta de plata",titulo:"El Tour Championship Colombia",q:"alejoCorte",
+texto:()=>`Abren inscripciones para el <b>Tour Championship Colombia</b>: ${cop(P.championship)} y solo 90 cupos. Con caddie, son ${cop(P.championship+(P.caddie[s.caddie]||0))}. Tienes ${cop(s.dinero)}. ¿Cómo consigues la plata para competir?`,
+opts:[
+{t:"Pagar de mi bolsillo",c:()=>`−${cop(P.championship+(P.caddie[s.caddie]||0))}`,fx:"Si alcanza, juegas sin deberle a nadie.",cost:()=>P.championship+(P.caddie[s.caddie]||0),
+go:()=>{s.juegaC=true;return{r:"Pagas con lo que tienes. La cuenta queda en los huesos.",d:{}}}},
+{t:"Pedirle plata a la familia",c:"+$1.000.000",fx:"Juegas, pero con culpa.",go:()=>{s.dinero+=1000000;s.deuda+=1000000;s.familia=true;s.juegaC=true;return{r:"Tu mamá te transfiere un millón. No dice nada; no hace falta.",d:{dinero:1000000,mental:-10},eco:"Ese préstamo va a volver a la mesa del comedor."}}},
+{t:"Buscar un patrocinador local",c:"Puede fallar",fx:"Entre $500.000 y $3.000.000 si funciona.",go:()=>{const p=.3+s.rep/150+(s.exhibicion?.2:0);if(chance(p)){const m=Math.round(rnd(10,30))*100000;s.dinero+=m;s.patroLocal=true;s.juegaC=true;return{r:`${s.exhibicion?"El gerente que te vio en la exhibición":"Una ferretería del barrio"} te apoya con ${cop(m)}.`,d:{dinero:m,rep:5}}}
+return{r:"Nadie responde a tiempo. Te quedas sin inscripción.",d:{mental:-8,ranking:8,rep:-2}}}},
+{t:"Vender equipo o empeñar algo",c:"+$1.200.000",fx:"Plata rápida, pero pierdes herramientas.",go:()=>{s.dinero+=1200000;s.juegaC=true;return{r:"Vendes tu juego de maderas y el telémetro. Juegas con lo que quedó.",d:{dinero:1200000,tecnica:-8}}}},
+{t:"Trabajar como caddie o dar clases",c:"+$600.000 · no juegas",fx:"Mejora la economía, pierdes el torneo.",go:()=>{s.dinero+=600000;s.ingresos+=600000;return{r:"Cargas la bolsa de otro en el Championship. Desde ahí ves el torneo que querías jugar.",d:{dinero:600000,mental:-8,fisico:-4,ranking:8}}}},
+{t:"No jugar y esperar el siguiente",c:"$0",fx:"Proteges la plata, pierdes ritmo.",go:()=>{return{r:"Te quedas en casa. El ranking se mueve sin ti.",d:{mental:-5,rep:-4,ranking:10}}}}
+]},
+lesion:{tag:"Lesión",titulo:"Te duele la espalda",q:"alejoLesion",
+texto:()=>`${s.lesion>=30?"Llevas semanas cargando la bolsa y entrenando sin parar. ":""}Sientes un tirón en la espalda baja. El médico recomienda dos semanas de descanso, pero hay un torneo en diez días.`,
+opts:[
+{t:"Descansar y recuperarme",c:"$0",fx:"Mejor a largo plazo. Pierdes el torneo.",go:()=>{return{r:"Dos semanas sin golpear una bola. Duele más la cabeza que la espalda.",d:{lesion:-35,fisico:10,mental:-6,ranking:6}}}},
+{t:"Jugar con dolor",c:"$0",fx:"Mantienes presencia. Puede empeorar.",go:()=>{const mal=chance(.35+s.lesion/200);return{r:mal?"En el hoyo 8 sientes que algo se rompe. Terminas la vuelta como puedes y te retiras.":"Aprietas los dientes y terminas. Esta vez la espalda aguantó.",d:mal?{lesion:45,fisico:-25,mental:-12}:{lesion:10,fisico:-6,rep:2}}}},
+{t:"Fisioterapia y jugar con precaución",c:"−$400.000",fx:"Solución intermedia, con riesgo.",cost:400000,go:()=>{pay(400000);return{r:"Cinco sesiones de fisioterapia. Juegas con faja y sin forzar el swing.",d:{dinero:-400000,lesion:-20,fisico:4}}}},
+{t:"Cambiar la técnica para proteger la zona",c:"$0",fx:"Alivia el dolor, puede desordenar el swing.",go:()=>{return{r:"Acortas el backswing. Duele menos; la bola vuela menos.",d:{lesion:-10,tecnica:-10},eco:"Ese swing nuevo puede quedarse más tiempo del que crees."}}}
+]},
+patrocinio:{tag:"Patrocinio",titulo:"Una marca te ofrece apoyo",q:"gusPatrocinio",
+texto:()=>`Una marca local te ofrece ${cop(s.rep>=40?2000000:1500000)}, pero exige usar su logo, publicar contenido y asistir a eventos promocionales.`,
+opts:[
+{t:"Aceptar el patrocinio completo",c:()=>`+${cop(s.rep>=40?2000000:1500000)}`,fx:"Estabilidad y visibilidad, menos tiempo para entrenar.",go:()=>{const m=s.rep>=40?2000000:1500000;s.dinero+=m;s.patro=m;return{r:"Firmas. Ahora tu gorra tiene logo y tu agenda tiene eventos los jueves.",d:{dinero:m,rep:8,tecnica:-4,mental:4}}}},
+{t:"Negociar un patrocinio menor",c:"+$500.000 a $1.000.000",fx:"Opción equilibrada.",go:()=>{const m=Math.round(rnd(5,10))*100000;s.dinero+=m;s.patro=m;return{r:`Cierras en ${cop(m)} con menos obligaciones. Sigues entrenando a tu ritmo.`,d:{dinero:m,rep:4,mental:3}}}},
+{t:"Rechazarlo para concentrarme",c:"$0",fx:"Proteges el foco, no la cuenta.",go:()=>{return{r:"Dices que no. Tu cuenta te mira feo.",d:{tecnica:3,mental:-3}}}},
+{t:"Aceptar y pedir más apoyo",c:"Alto riesgo",fx:"Puedes conseguir más… o perderlo todo.",go:()=>{if(chance(.25+s.rep/200)){s.dinero+=3500000;s.patro=3500000;return{r:`Les presentas tus números y aceptan: ${cop(3500000)} y viáticos para un torneo.`,d:{dinero:3500000,rep:10,mental:6}}}
+return{r:"La marca se echa para atrás. \"Lo volvemos a hablar el próximo año\".",d:{mental:-10,rep:-2}}}}
+]},
+entrenador:{tag:"Entrenador",titulo:"Un plan de tres meses",q:"gusEquipo",
+texto:()=>`Un entrenador reconocido te ofrece un plan de tres meses por ${cop(P.coachPlan)}: swing, estrategia y preparación física. Una clase suelta de golf en Bogotá cuesta entre $56.000 y $100.000 la hora.`,
+opts:[
+{t:"Aceptar el plan completo",c:`−${cop(P.coachPlan)}`,fx:"Gran mejora posible. Puede dejarte sin plata.",cost:P.coachPlan,go:()=>{pay(P.coachPlan);return{r:"Video, launch monitor, plan anual. Por primera vez alguien entrena contigo y no solo para ti.",d:{dinero:-P.coachPlan,tecnica:12,fisico:4,mental:3}}}},
+{t:"Tomar solo algunas clases",c:`−${cop(P.coachClases)}`,fx:"Mejora prudente.",cost:P.coachClases,go:()=>{pay(P.coachClases);return{r:"Cinco clases puntuales para corregir lo urgente.",d:{dinero:-P.coachClases,tecnica:8}}}},
+{t:"Buscar un entrenador más económico",c:`−${cop(P.coachEco)}`,fx:"Avance lento pero seguro.",cost:P.coachEco,go:()=>{pay(P.coachEco);return{r:"Un profesor del club te ayuda los lunes. Avanzas despacio.",d:{dinero:-P.coachEco,tecnica:5}}}},
+{t:"Entrenar solo con videos",c:"$0",fx:"Funciona con disciplina. Puedes consolidar errores.",go:()=>{const ok=chance(.5);return{r:ok?"YouTube, un trípode y mucha disciplina. Funciona.":"Copias el swing de un jugador del PGA Tour. Tu cuerpo no es el suyo.",d:ok?{tecnica:5}:{tecnica:-4,lesion:8}}}}
+]},
+presion:{tag:"Presión de resultados",titulo:"¿Y si buscas otro trabajo?",q:"gusPresion",
+texto:()=>`${s.fallos>=2?`Llevas ${s.fallos} torneos sin pasar el corte. `:"Los resultados no llegan al ritmo que necesitas. "}${s.familia?"Tu familia todavía espera el millón que te prestó. ":""}En la casa empiezan a preguntar si no deberías buscar otro trabajo. Un amigo te propone dejar el golf profesional y dedicarte a enseñar.`,
+opts:[
+{t:"Seguir compitiendo y ajustar el plan",c:"Sigues",fx:"Mantienes el sueño. Más disciplina financiera.",go:()=>{return{r:"Haces una hoja de cálculo con cada peso. El sueño sigue, con presupuesto.",d:{mental:-6,rep:2}}}},
+{t:"Combinar golf con docencia",c:"+$1.200.000",fx:"Ingresos estables, menos entrenamiento.",go:()=>{s.dinero+=1200000;s.ingresos+=1200000;s.docencia=true;return{r:"Tomas un horario fijo en una academia. Ya sabes cuánto entra a fin de mes.",d:{dinero:1200000,mental:6,tecnica:-5}}}},
+{t:"Dejar el golf competitivo",c:"Fin de la carrera competitiva",fx:"Menos estrés. Se cierra la puerta profesional.",go:()=>{s.fin="reinvencion";s.finCausa="dejaste el golf competitivo bajo la presión de los resultados";return{r:"Guardas la tarjeta de profesional en un cajón.",d:{mental:5}}}},
+{t:"Buscar apoyo psicológico y reorganizar el calendario",c:`−${cop(P.psico*2)}`,fx:"Recuperas la cabeza. Requiere plata y tiempo.",cost:P.psico*2,go:()=>{pay(P.psico*2);return{r:"Con tu psicóloga eliges menos torneos, mejor escogidos.",d:{dinero:-P.psico*2,mental:10}}}}
+]},
+internacional:{tag:"Torneo internacional",titulo:"PGA Tour Americas llega a Colombia",q:"gusUSA",
+texto:()=>`Te abren un cupo en la parada colombiana del <b>PGA Tour Americas</b>. Inscripción: USD 220 más impuestos (≈ ${cop(900000)}); con caddie, hospedaje y transporte de la semana, el total es cerca de ${cop(P.americas)}. La bolsa es de USD 225.000 y el ganador recibe USD 40.500.`,
+opts:[
+{t:"Jugar aunque deba endeudarme",c:`−${cop(P.americas)}`,fx:"Máxima exposición, alto riesgo financiero.",go:()=>{pay(P.americas);if(s.dinero<0){s.deuda+=-s.dinero;s.dinero=0}s.juegaD=true;return{r:"Pasas la tarjeta de crédito. Es tu oportunidad y la vas a jugar.",d:{mental:-4}}}},
+{t:"Buscar patrocinio urgente",c:"Puede fallar",fx:"Si funciona, entras mejor preparado.",go:()=>{const p=.2+s.rep/120+(s.patro?.15:0);if(chance(p)){s.juegaD=true;s.patroD=true;return{r:"Tu patrocinador cubre la semana completa. Llegas a jugar, no a sobrevivir.",d:{rep:6,mental:8}}}
+return{r:"Nadie alcanza a responder. El cupo pasa al siguiente de la lista.",d:{mental:-12,rep:-3}}}},
+{t:"Vender equipo o pedir un préstamo",c:"+$1.500.000 · deuda",fx:"Plata rápida, futuro inestable.",go:()=>{s.dinero+=1500000;s.deuda+=1500000;pay(P.americas);if(s.dinero<0){s.deuda+=-s.dinero;s.dinero=0}s.juegaD=true;return{r:"Firmas un préstamo de libre inversión. Juegas con plata prestada.",d:{tecnica:-3,mental:-8}}}},
+{t:"Rechazar la oportunidad",c:"$0",fx:"Proteges las finanzas, pierdes la vitrina.",go:()=>{return{r:"Ves el torneo por streaming. El cupo lo toma un jugador con patrocinio.",d:{mental:-8,rep:-4}}}}
+]},
+final:{tag:"Fin de temporada",titulo:"¿Qué haces con tu carrera?",q:"gusApoyo",
+texto:()=>`Termina la temporada con ${cop(s.dinero)} en la cuenta${s.deuda?` y ${cop(s.deuda)} de deuda`:""}, ranking #${s.ranking} y reputación ${Math.round(s.rep)}. ¿Cuál es tu siguiente paso?`,
+opts:[
+{t:"Seguir en el circuito colombiano",c:"Menor costo",fx:"Construir reputación local antes de salir.",go:()=>({r:"Otra temporada en casa.",d:{},fin:"local"})},
+{t:"Buscar clasificación internacional",c:"Q-School: USD 2.750",fx:"Mayor exposición y mayor gasto.",go:()=>({r:"Apuntas a la Q-School.",d:{},fin:"intl"})},
+{t:"Convertirme en profesor de golf",c:"Ingresos estables",fx:"Sigues en el golf sin depender de resultados.",go:()=>({r:"Te quedas enseñando.",d:{},fin:"profe"})},
+{t:"Crear contenido y buscar marcas",c:"Requiere constancia",fx:"Puede abrir puertas comerciales.",go:()=>({r:"Abres un canal sobre la vida real del golfista.",d:{},fin:"contenido"})},
+{t:"Tomar un año para reconstruirme",c:"Cuerpo, técnica y finanzas",fx:"Pierdes ritmo, evitas el quiebre.",go:()=>({r:"Un año para sanar y ordenar las cuentas.",d:{},fin:"pausa"})}
+]}
+};
+/* =====================================================================
+FLUJO
+===================================================================== */
+const FLOW=[
+{id:"inicio"},
+{id:"caddie",when:()=>s.torneoA&&s.torneoA!=="desarrollo"},
+{id:"vuelta",when:()=>!!s.torneoA,pre:()=>{s.vueltaEn=s.torneoA;s.caddieUso=s.torneoA==="desarrollo"?"marcador":s.caddie}},
+{id:"T",torneo:"A",when:()=>!!s.torneoA},
+{id:"presupuesto"},
+{id:"semana"},
+{id:"caddie",when:()=>!s.caddie||s.caddie==="marcador"},
+{id:"vuelta",when:()=>!s.vueltaHecha,pre:()=>{s.vueltaEn="hatogrande";s.caddieUso=s.caddie}},
+{id:"T",torneo:"B"},
+{id:"dinero"},
+{id:"T",torneo:"C",when:()=>s.juegaC},
+{id:"lesion"},
+{id:"patrocinio"},
+{id:"entrenador"},
+{id:"presion"},
+{id:"internacional"},
+{id:"T",torneo:"D",when:()=>s.juegaD},
+{id:"final"}
+];
+function reset(){
+s={dinero:3000000,tecnica:50,fisico:70,mental:60,rep:20,lesion:0,ranking:150,deuda:0,
+gastado:0,premios:0,ingresos:0,cortes:0,fallos:0,torneos:[],log:[],ecos:[],caddie:null,caddieUso:null,mod:null,
+vueltaHecha:false,patro:0,fin:null,finCausa:""};
+step=-1; prev={}; view={type:"intro"}; render();
+}
+function checkFin(){
+if(s.fin) return s.fin;
+if(s.mental<=0){s.fin="quemado";s.finCausa="la presión, las deudas y los malos resultados te vaciaron la cabeza"}
+else if(s.fisico<=0||s.lesion>=70){s.fin="lesionado";s.finCausa="la lesión de espalda se volvió crónica y el cuerpo dijo basta"}
+return s.fin;
+}
+function advance(){
+if(checkFin()&&!["intl","local","profe","contenido","pausa"].includes(s.fin)){view={type:"fin"};return render()}
+while(++step<FLOW.length){
+const f=FLOW[step];
+if(f.when&&!f.when())continue;
+if(f.pre)f.pre();
+if(f.id==="T"){view={type:"torneo",res:jugarEtapa(f.torneo)};return render()}
+view={type:"esc",id:f.id};return render();
+}
+view={type:"fin"};render();
+}
+function jugarEtapa(etapa){
+const mod=s.mod||{m:0,v:0}; let key, cobro=0, nota="";
+if(etapa==="A"){key=s.torneoA}
+if(etapa==="B"){key="hatogrande"; s.caddieUso=s.caddie;
+cobro=P.hatogrande+(P.caddie[s.caddie]||0);
+if(s.dinero<cobro){return {skip:true,nombre:TORNEOS.hatogrande.nombre,txt:`No te alcanzó para inscribirte: necesitabas ${cop(cobro)} y tenías ${cop(s.dinero)}.`,d:{mental:-8,rep:-3,ranking:8}}}
+pay(cobro); nota=`Inscripción ${cop(P.hatogrande)} + caddie ${cop(P.caddie[s.caddie]||0)}`;
+if(s.sinRitmo){mod.m-=5;nota+=" · Sin ritmo de competencia: el mes que no jugaste se nota."; s.sinRitmo=false}}
+if(etapa==="C"){key="championship"; s.caddieUso=s.caddie; cobro=P.championship+(P.caddie[s.caddie]||0);
+if(s.dinero<cobro){s.deuda+=cobro-s.dinero;s.dinero=cobro} pay(cobro); nota=`Inscripción ${cop(P.championship)} + caddie ${cop(P.caddie[s.caddie]||0)}`}
+if(etapa==="D"){key="americas"; s.caddieUso="pro"; nota=s.patroD?"Tu patrocinador cubrió la semana.":`Te costó ${cop(P.americas)}`; s.gastadoD=s.patroD?0:P.americas}
+const usarVuelta=s.vueltaEn===key&&!s.vueltaHecha;
+const r=jugar(key,usarVuelta?mod.m:0,usarVuelta?mod.v:0,usarVuelta&&mod.tope!==undefined?mod.tope:null);
+if(usarVuelta){s.vueltaHecha=true;s.mod=null}
+if(etapa==="A") r.costo=key==="desarrollo"?P.desarrollo+P.marcador:P.regional+(P.caddie[s.caddie]||0);
+else if(etapa==="D") r.costo=s.gastadoD;
+else r.costo=cobro;
+if(etapa==="A"&&key!=="desarrollo"&&s.caddie){pay(P.caddie[s.caddie]||0)}
+r.nota=nota; return r;
+}
+function choose(idx){
+const sc=SC[view.id], o=sc.opts[idx];
+document.querySelectorAll(".opt").forEach(b=>b.classList.add("dis"));
+const out=o.go(); apply(out.d&&Object.fromEntries(Object.entries(out.d).filter(([k])=>k!=="dinero")));
+if(out.eco)s.ecos.push(out.eco);
+s.log.push({tag:sc.tag,t:o.t});
+if(out.fin){s.fin=out.fin;view={type:"fin"};return render()}
+view={type:"res",sc:view.id,o,out};render();
+}
+/* =====================================================================
+PANTALLAS
+===================================================================== */
+function render(){
+hud();
+const el=$("screen"); el.style.animation="none"; void el.offsetWidth; el.style.animation="";
+window.scrollTo(0,0);
+const V=view;
+if(V.type==="intro"){
+$("month").textContent="Temporada 2026";
+el.innerHTML=`<p class="kicker">El costo del green</p>
+<h1>Tienes talento.<br>¿Te alcanza?</h1>${STAKES}
+<p class="lead">Eres un golfista colombiano de 24 años, con talento y sin patrocinio. Tienes <b>${cop(3000000)}</b> para toda la temporada y hasta doce decisiones por delante.</p>
+<p class="hook">Ninguna decisión es buena o mala por sí sola: pagar un caddie puede salvar un torneo o hundir tus finanzas.</p>
+<div class="how"><div><b>Plata</b>Inscripciones, caddie, viajes, entrenamiento.</div><div><b>Cuerpo</b>Técnica, físico y lesiones.</div><div><b>Cabeza</b>Presión, confianza y reputación.</div></div>
+<p class="flow">Si la cabeza o el físico llegan a cero, tu carrera se detiene. Los precios son reales de Colombia en 2026.</p>
+<button class="btn" id="go">Empezar la temporada</button>
+<p class="credits">Basado en los testimonios de Alejandro Velásquez (golfista profesional), Gustavo Mendoza (69 torneos ganados en Colombia) y Carlos Avendaño (periodista de golf), y en precios oficiales de la Federación Colombiana de Golf y PGA Tour Americas para 2026.</p>`;
+$("go").onclick=advance; return;
+}
+if(V.type==="esc"){
+const sc=SC[V.id];
+$("month").textContent=`Decisión ${s.log.length+1}`;
+const val=x=>typeof x==="function"?x():x;
+el.innerHTML=`<div class="tag">${sc.tag}</div><h2>${sc.titulo}</h2><p class="lead">${sc.texto()}</p>
+<div class="opts" role="group" aria-label="Opciones">${sc.opts.map((o,k)=>{
+const cost=val(o.cost)||0; let why=o.req?o.req():null;
+if(!why&&cost>s.dinero) why=`No te alcanza: tienes ${cop(s.dinero)}.`;
+return `<button class="opt" data-k="${k}" ${why?"disabled":""}><span class="t">${o.t}</span><span class="c">${val(o.c)}</span><span class="fx">${o.fx}</span>${why?`<span class="why">${why}</span>`:""}</button>`}).join("")}</div>`;
+el.querySelectorAll(".opt:not([disabled])").forEach(b=>b.onclick=()=>choose(+b.dataset.k));
+if(!el.querySelector(".opt:not([disabled])")){ // sin salida: talento sin recursos
+s.fin="sinrecursos";s.finCausa="no tuviste con qué pagar la siguiente decisión";
+el.insertAdjacentHTML("beforeend",`<button class="btn" id="fin">Ver cómo termina</button>`);$("fin").onclick=()=>{view={type:"fin"};render()};
+}
+return;
+}
+if(V.type==="res"){
+const sc=SC[V.sc], out=V.out;
+el.innerHTML=`<div class="tag">${sc.tag} · tu decisión</div><h2>${V.o.t}</h2><p class="lead">${out.r}</p>
+<div class="chips">${chips(out.d)}</div>
+${quote(sc.q)}
+${out.eco?`<p class="warn">${out.eco}</p>`:""}
+<button class="btn" id="next">${(()=>{const e=checkFin();return e&&!["intl","local","profe","contenido","pausa"].includes(e)?"Ver cómo termina":"Continuar"})()}</button>`;
+$("next").onclick=advance; return;
+}
+if(V.type==="torneo"){
+const r=V.res;
+$("month").textContent="Torneo";
+if(r.skip){apply(r.d);hud();
+el.innerHTML=`<div class="tag">Torneo · ${r.nombre}</div><div class="result bad">No jugaste</div><p class="lead">${r.txt}</p><div class="chips">${chips(r.d)}</div>${quote("alejoCorte")}<button class="btn" id="next">Continuar</button>`;
+$("next").onclick=advance; return;}
+const neto=r.premio-r.costo;
+el.innerHTML=`<div class="card"><div class="tag">Resultado · ${r.T.nombre}</div>
+<div class="result ${r.k===0?"bad":r.k>=2?"good":""}">${r.txt}</div>
+<div class="ledger"><span>Lo que te costó jugar</span><span class="n">−${cop(r.costo)}</span><span>Premio${r.usd?` (${r.usd})`:""}</span><span class="n">${r.premio?"+"+cop(r.premio):"$0"}</span><span class="tot">Balance del torneo</span><span class="n tot" style="color:${neto<0?"var(--red)":"var(--green)"}">${neto>0?"+":""}${cop(neto)}</span></div>
+${r.nota?`<p class="dice">${r.nota}</p>`:""}
+${r.presion?`<p class="muted">Jugaste con la cuenta casi vacía. La presión de necesitar el premio te costó golpes.</p>`:""}
+${neto<0&&r.premio>0?`<p class="muted">Pasaste el corte y aun así perdiste plata.</p>`:""}
+${s.caddieUso==="solo"?`<p class="muted">Cargaste tu propia bolsa tres días: la espalda lo sintió.</p>`:""}
+<div class="chips">${chips(r.fx)}</div></div>
+${quote(r.k===0?"alejoCorte":r.k>=3?"carlosMedios":"gusBolsa")}
+<button class="btn" id="next">Continuar</button>`;
+$("next").onclick=advance; return;
+}
+if(V.type==="fin") renderFin();
+}
+const FINALES={
+consolidado:["Profesional consolidado","Lo lograste… por ahora.","Conseguiste patrocinio, resultados y estabilidad. Eres la excepción: casi nadie llega aquí sin apoyo."],
+superviviente:["Golfista superviviente","Sigues compitiendo.","Juegas, pero dependes de clases, préstamos y trabajos alternos. Cada inscripción es una negociación con tu cuenta."],
+sinrecursos:["Talento sin recursos","Tenías nivel. No te alcanzó.","No fue un mal swing: fue una cuenta que no alcanzó para el siguiente paso."],
+lesionado:["Lesionado","El cuerpo dijo basta.","Priorizaste competir pese al dolor y perdiste la continuidad."],
+quemado:["Quemado mentalmente","Dejaste de disfrutarlo.","Acumulaste presión, deudas y malos resultados hasta que el golf dejó de ser tuyo."],
+reinvencion:["Reinvención","Dejaste la alta competencia.","Encontraste una vía sostenible en el golf, lejos de la tarjeta de profesional."],
+despegue:["Despegue internacional","Convertiste una oportunidad en carrera.","Clasificaste, conseguiste apoyo y saliste del país con respaldo. Muy pocos lo logran así."]
+};
+function resolverFinal(){
+const f=s.fin, buenD=s.torneos.some(t=>t.key==="americas"&&t.k>=3);
+if(["quemado","lesionado","sinrecursos","reinvencion"].includes(f)) return f;
+if(f==="intl") return (buenD||(s.rep>=55&&(s.patro||s.dinero>=6000000)))?"despegue":(s.dinero+(s.patro?2000000:0)>=11000000?"superviviente":"sinrecursos");
+if(f==="profe"||f==="contenido") return "reinvencion";
+if(f==="pausa") return s.deuda>0?"superviviente":"superviviente";
+if(f==="local") return (s.rep>=60&&s.patro&&s.dinero>=5000000&&!s.deuda)?"consolidado":"superviviente";
+return "superviviente";
+}
+let current=null;
+function renderFin(){
+const key=resolverFinal(), F=FINALES[key], el=$("screen");
+const invertido=s.gastado, neto=s.premios-invertido;
+const n=s.torneos.length;
+current={key,frase:`En El Costo del Green terminé como "${F[0]}": jugué ${n} ${n===1?"torneo":"torneos"}, invertí ${cop(invertido)} y gané ${cop(s.premios)} en premios.`};
+$("month").textContent="Fin de la temporada"; hud();
+const extra=key==="reinvencion"&&s.finCausa?` Esta vez, ${s.finCausa}.`:(s.finCausa&&["quemado","lesionado","sinrecursos"].includes(key)?` En tu caso, ${s.finCausa}.`:"");
+el.innerHTML=`<p class="ending ${["consolidado","despegue","superviviente","reinvencion"].includes(key)?"ok":""}">${F[0]}</p>
+<h1 style="font-size:clamp(36px,10.5vw,58px)">${F[1]}</h1>${STAKES}
+<p class="lead">${F[2]}${extra}</p>
+<div class="big">
+<div><span class="n">${cop(invertido)}</span><span>invertidos en tu carrera</span></div>
+<div><span class="n" style="color:${s.premios?"var(--green)":"var(--fg)"}">${cop(s.premios)}</span><span>ganados en premios</span></div>
+<div><span class="n">${s.cortes}/${n}</span><span>cortes pasados</span></div>
+<div><span class="n">#${s.ranking}</span><span>ranking final${s.deuda?` · deuda ${cop(s.deuda)}`:""}</span></div>
+</div>
+<p class="note">Empezaste con el mismo talento en todas las partidas. Lo que cambió tu carrera fue cómo administraste la plata, el cuerpo y la cabeza.</p>
+${quote(key==="despegue"||key==="consolidado"?"gusEquipo":"gusApoyo")}
+${s.ecos.length?`<div class="tag">Lo que tus decisiones dejaron</div><ol class="log">${s.ecos.map((e,i)=>`<li><span>Eco ${i+1}</span>${e}</li>`).join("")}</ol>`:""}
+<div class="tag">Tus decisiones</div>
+<ol class="log num">${s.log.map((l,i)=>`<li><span>${i+1}</span><div><b>${l.tag}</b> · ${l.t}</div></li>`).join("")}</ol>
+<section class="docu"><span class="tag">Fuera de Límites · el documental</span><h3>Esto les pasa de verdad</h3>
+<p class="lead">Alejandro, Gustavo y Carlos cuentan lo que acabas de jugar.</p>
+${CONFIG.documentalURL?`<a class="btn" href="${CONFIG.documentalURL}" target="_blank" rel="noopener">Ver el documental</a>`:""}</section>
+${CONFIG.googleForm?formHTML():""}
+<div class="row"><button class="btn ghost" id="share">Compartir mi resultado</button><button class="btn" id="again">Jugar otra temporada</button></div>
+<details class="sources"><summary>Fuentes de los precios</summary>
+<p>Federación Colombiana de Golf: Resolución 2055 Tour de Desarrollo 2026 (inscripción $455.000 nacionales, marcador $150.000, sin caddie), Reglamento 8º Abierto HG 2026 (profesionales $500.000, caddie $100.000/día, bolsa $75 millones), I Tour Championship Colombia 2026 ($555.000, 90 cupos), Abierto del Eje Cafetero 2026 (caddie $125.000/día). PGA Tour Americas 2026 (USD 200–220 por evento, bolsa USD 225.000, ganador USD 40.500) y Q-School 2026 (USD 2.250–2.750). Psicología deportiva en Bogotá $80.000–180.000 por sesión (Doctoralia, Top Doctors, AgendaPro). Clases de golf $56.000–100.000 por hora (Superprof). Las demás cifras son aproximaciones del equipo.</p></details>`;
+$("again").onclick=reset; $("share").onclick=share;
+if(CONFIG.googleForm) $("refl").addEventListener("submit",sendRefl);
+}
+async function share(){
+const url=location.href.split("#")[0].split("?")[0], text=current.frase+" ¿Tú cómo terminarías?";
+try{ if(navigator.share){await navigator.share({title:"El Costo del Green",text,url});return} }catch(e){return}
+try{ await navigator.clipboard.writeText(text+" "+url); $("share").textContent="Copiado"; setTimeout(()=>{const b=$("share");if(b)b.textContent="Compartir mi resultado"},2000);}catch(e){}
+}
+/* ---------- Encuesta opcional (Google Forms) ---------- */
+function formHTML(){
+const pill=(n,v)=>`<input type="radio" name="${n}" id="${n}_${v.replace(/\W/g,"")}" value="${v}"><label for="${n}_${v.replace(/\W/g,"")}">${v}</label>`;
+return `<form class="uni" id="refl" novalidate><h2>Ahora cuéntanos tú</h2>
+<p class="lead">Tus respuestas alimentan la investigación de Fuera de Límites. Son anónimas.</p>
+<fieldset><legend>Antes de jugar, ¿qué tanto sabías de lo que enfrenta un golfista profesional en Colombia?</legend><div class="pills">${["No tenía idea","Sabía muy poco","Sabía algo","Sabía bastante"].map(v=>pill("conoc",v)).join("")}</div></fieldset>
+<fieldset><legend>¿Qué fue lo que más te sorprendió?</legend><div class="pills">${["Lo que cuesta competir","La presión mental","Que no haya patrocinio","Que el talento no alcance"].map(v=>pill("sorp",v)).join("")}</div></fieldset>
+<div><label class="q" for="exp">¿Cómo fue tomar estas decisiones?</label><textarea id="exp" rows="3" maxlength="500"></textarea></div>
+<div><label class="q" for="apr">¿Qué aprendiste que no sabías antes de jugar?</label><textarea id="apr" rows="3" maxlength="500"></textarea></div>
+<button class="btn" type="submit" id="send">Enviar mi respuesta</button><p id="sendMsg" class="muted" role="status"></p></form>`;
+}
+async function sendRefl(e){
+e.preventDefault(); const msg=$("sendMsg"), g=CONFIG.googleForm;
+const conoc=(document.querySelector('input[name="conoc"]:checked')||{}).value;
+if(!conoc){msg.textContent="Cuéntanos qué tanto sabías antes de jugar.";return}
+const fd=new FormData(), add=(k,v)=>{if(g.campos[k])fd.append(g.campos[k],v)};
+add("final",FINALES[current.key][0]); add("conocimiento",conoc);
+add("sorpresa",(document.querySelector('input[name="sorp"]:checked')||{}).value||"");
+add("experiencia",$("exp").value.trim().slice(0,500)); add("aprendizaje",$("apr").value.trim().slice(0,500));
+$("send").disabled=true; msg.textContent="Enviando…";
+try{await fetch(g.action,{method:"POST",mode:"no-cors",body:fd});$("refl").innerHTML='<h2>Gracias.</h2><p class="lead">Tu respuesta ya hace parte de la investigación de Fuera de Límites.</p>'}
+catch(err){$("send").disabled=false;msg.textContent="No se pudo enviar. Revisa tu conexión e inténtalo otra vez."}
+}
+reset();
+</script>
+</body>
+</html>
